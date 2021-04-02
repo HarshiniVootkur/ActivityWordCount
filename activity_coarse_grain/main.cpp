@@ -97,9 +97,13 @@ int main(int argc, char **argv)
 
   //create a thread for each file
   //to eliminate race condition, call function hash_addition
-  for(int i=0;i<wordmap.size();++i)
+  for(int i=0;i<wordmap.size();i++)
     {
-      mythreads.push_back(std::thread(hashfn,std::ref(wordmap.at(i)),std::ref(dict),std::ref(m)));
+      mythreads.push_back(std::thread(hashfn,std::ref(wordmap.at(i)),std::ref(ht),std::ref(m)));
+    }
+  for(auto &t: mythreads)
+    {
+      t.join();
     }
 
   // Stop Timer                                                                 
@@ -117,6 +121,7 @@ int main(int argc, char **argv)
 
   // Do not touch this, need for test cases
   std::cout << ht.get(testWord) << std::endl;
+  std::cerr<<time_elapsed.count()<<"\n";
 
   return 0;
 }
