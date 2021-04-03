@@ -1,2 +1,0 @@
-./main: /lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./main)
-./main: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.21' not found (required by ./main)
