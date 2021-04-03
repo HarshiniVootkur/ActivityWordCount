@@ -49,7 +49,22 @@ std::vector<std::vector<std::string>> tokenizeLyrics(const std::vector<std::stri
   return ret;
 }
 
+<<<<<<< HEAD:activity_coarse_grain/main.cpp
+//populate hash table
+void hashfn(std::vector<std::string> filecontent, Dictionary<std::string,int>& dict, std::mutex &mut)
+{
+  for(auto &w: filecontent)
+    {
+      mut.lock();
+      int count=dict.get(w);
+      count++;
+      dict.set(w,count);
+      mut.unlock();
+    }
+}
+=======
 
+>>>>>>> 615c75048735760baadf3cb17fc2211036c2ae47:coarse_grain/main.cpp~
 
 int main(int argc, char **argv)
 {
@@ -75,7 +90,7 @@ int main(int argc, char **argv)
   auto wordmap = tokenizeLyrics(files);
 
   MyHashtable<std::string, int> ht;
-  Dictionary<std::string, int>& dict = ht;
+  Dictionary<std::string, int>& dict= ht;
 
 
 
@@ -83,6 +98,19 @@ int main(int argc, char **argv)
 
 
 
+<<<<<<< HEAD:activity_coarse_grain/main.cpp
+  //create a thread for each file
+  //to eliminate race condition, call function hash_addition
+  for(int i=0;i<wordmap.size();i++)
+    {
+      mythreads.push_back(std::thread(hashfn,wordmap.at(i),std::ref(ht),std::ref(m)));
+    }
+  for(auto &t: mythreads)
+    {
+      t.join();
+    }
+=======
+>>>>>>> 615c75048735760baadf3cb17fc2211036c2ae47:coarse_grain/main.cpp~
 
 
 
