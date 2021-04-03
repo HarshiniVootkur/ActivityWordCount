@@ -50,7 +50,7 @@ vector<vector<string>> tokenizeLyrics(const vector<string> files) {
   return ret;
 }
 
-void hashtable_populate(vector<string> filecontent, Dictionary<string,int>& dict,mutex& mut)
+void hash_populate(vector<string> filecontent, Dictionary<string,int>& dict,mutex& mut)
 {
   for (auto & w : filecontent)
     {
@@ -90,12 +90,12 @@ int main(int argc, char **argv)
   
   // write code here
 
-  mutex mu;
+  mutex m;
   vector<thread> mythread;
   auto startTime=chrono::steady_clock::now();
   for(int i=0;i<wordmap.size();i++)
     {
-      mythread.push_back(thread(hashtable_populate,wordmap.at(i),ref(ht),ref(mu)));
+      mythread.push_back(thread(hash_populate,wordmap.at(i),ref(ht),ref(m)));
     }
 
   for(auto &t: mythread)
