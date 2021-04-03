@@ -50,14 +50,19 @@ vector<vector<string>> tokenizeLyrics(const vector<string> files) {
   return ret;
 }
 
+//Populate hash table
 void hash_populate(vector<string> filecontent, Dictionary<string,int>& dict,mutex& mut)
 {
   for (auto & w : filecontent)
     {
+      //lock the mutex to avoid race condition
       mut.lock();
+      
       int count=dict.get(w);
       ++count;
       dict.set(w,count);
+      
+      //unlock mutex
       mut.unlock();
     }
 }
