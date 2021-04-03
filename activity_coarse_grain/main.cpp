@@ -48,13 +48,13 @@ std::vector<std::vector<std::string>> tokenizeLyrics(const std::vector<std::stri
 }
 
 //populate hash table
-void hashfn(std::vector<std::string> filecontent, Dictionary<std::string,int> &dict, std::mutex &mut)
+void hashfn(std::vector<std::string> filecontent, Dictionary<std::string,int>& dict, std::mutex &mut)
 {
   for(auto &w: filecontent)
     {
       mut.lock();
       int count=dict.get(w);
-      ++count;
+      count++;
       dict.set(w,count);
       mut.unlock();
     }
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
   auto wordmap = tokenizeLyrics(files);
 
   MyHashtable<std::string, int> ht;
-  Dictionary<std::string, int>& dict = ht;
+  Dictionary<std::string, int>& dict= ht;
 
   // write code here
 
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
   //to eliminate race condition, call function hash_addition
   for(int i=0;i<wordmap.size();i++)
     {
-      mythreads.push_back(std::thread(hashfn,std::ref(wordmap.at(i)),std::ref(ht),std::ref(m)));
+      mythreads.push_back(std::thread(hashfn,wordmap.at(i),std::ref(ht),std::ref(m)));
     }
   for(auto &t: mythreads)
     {
