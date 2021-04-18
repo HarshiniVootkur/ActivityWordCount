@@ -5,6 +5,11 @@
 #include <iostream>
 #include <vector>
 
+#include<mutex>
+#include<condition_variable>
+
+using namespace std;
+
 template<class K, class V>
 struct Node {
   K key;
@@ -27,7 +32,11 @@ protected:
   int capacity;
   int count;
   double loadFactor;
-  std::vector<Node<K,V>*> table;
+  vector<Node<K,V>*> table;
+  mutex m[100000];
+  
+
+  
 
   struct hashtable_iter : public dict_iter {
     MyHashtable& mt;
@@ -143,6 +152,62 @@ public:
       this->resize(this->capacity * 2);
     }
   }
+
+  virtual void increment(K &key)
+  {
+    int a=0;
+    condition_variable_any b;
+
+    size_t i = hash<K>{}(key) % this-> capacity;
+
+    /* if(i==0)
+      {
+	i=i+this->capacity;
+	}*/
+    i = i<0? i+this->capacity : i;
+
+    Node<K,V>* node = this-> table[i];
+
+    m[i].lock();
+    b.wait(m[i],[&](){
+		  return !a;
+		});
+
+    if(i)
+      {
+	while (node!=nullptr)
+	  {
+	    if(node -> key == key)
+	      {
+		node->value = node->value +1;
+		b.notify_one();
+
+		m[i].unlock();
+		return;
+	      }
+	    node=node->next;
+	  }
+      }
+
+    //no key has been found
+
+    node = new Node<K,V>(key,1);
+    node->next = this->table[i];
+    this->table[i]=node;
+    this->count++;
+  
+    
+    if(((double)this->count)/this->capacity>this->loadFactor)
+      {
+	int c=this->capacity * 2;
+	this->resize(this->capacity * 2);
+      }
+    a=1;
+    b.notify_one();
+    m[i].unlock();
+  }
+  
+    
 
   /**
    * deletes the node at given key

@@ -2,21 +2,26 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 #include "Dictionary.hpp"
 #include "MyHashtable.hpp"
 
+using namespace std;
+
 //Tokenize a string into individual word, removing punctuation at the
 //end of words
-std::vector<std::vector<std::string>> tokenizeLyrics(const std::vector<std::string> files) {
-  std::vector<std::vector<std::string>> ret;
+vector<vector<string>> tokenizeLyrics(const vector<string> files) {
+  vector<vector<string>> ret;
 
   for(auto filename : files) {
-    //std::cout<<"reading "<<filename<<"\n";
-    std::vector<std::string> my_vect;
-    std::ifstream in (filename);
+    //cout<<"reading "<<filename<<"\n";
+    vector<string> my_vect;
+    ifstream in (filename);
 
-    std::string line;
+    string line;
+
 
     //For each line
     while (getline(in, line, '\n')) {
@@ -24,45 +29,51 @@ std::vector<std::vector<std::string>> tokenizeLyrics(const std::vector<std::stri
       if (line[0] == '[')
         continue;
 
-      std::stringstream ssline (line);
+      stringstream ssline (line);
       //For all words
       while (ssline) {
-        std::string word;
+        string word;
         ssline >> word;
         if (ssline) {
           //remove punctuation at the end of word
           while (word.length() > 0
-                 && std::ispunct(word[word.length() - 1])) {
+                 && ispunct(word[word.length() - 1])) {
             word.pop_back();
           }
           my_vect.push_back(word);
         }
       }
     }
-    //std::cout<<"read "<<my_vect.size()<<" words\n";
+    //cout<<"read "<<my_vect.size()<<" words\n";
     ret.push_back(my_vect);
   }
   return ret;
 }
 
-
+void hashfn(MyHashtable<string,int> &dict, vector<string> filecontent,mutex& mut)
+{
+  for(int i=0;i<filecontent.size();i++)
+    {
+      dict.increment(filecontent[i]);
+    }
+}
 
 int main(int argc, char **argv)
 {
   if (argc < 4) {
-    std::cerr<<"usage: ./main <sources> <testword> <threshold>"<<std::endl;
+    cerr<<"usage: ./main <sources> <testword> <threshold>"<<endl;
     return -1;
   }
 
   // Parse Command Line
-  std::string source = argv[1];
-  std::string testWord = argv[2];
-  int32_t thresholdCount = std::stoi(argv[3]);
+  string source = argv[1];
+  string testWord = argv[2];
+  int32_t thresholdCount = stoi(argv[3]);
 
   // Obtain List of Files
-  std::vector<std::string> files;
-  std::ifstream in (source);
-  std::string line;
+  vector<std::string> files;
+  ifstream in (source);
+  string line;
   while (getline(in, line, '\n')) {
     files.push_back(line);
   }
@@ -70,32 +81,45 @@ int main(int argc, char **argv)
   // Tokenize Lyrics
   auto wordmap = tokenizeLyrics(files);
 
-  MyHashtable<std::string, int> ht;
-  Dictionary<std::string, int>& dict = ht;
+  MyHashtable<string, int> ht;
+  Dictionary<string, int>& dict = ht;
 
 
 
   // write code here
+  // create thread and mutex variables
 
+  vector<thread> mythreads;
+  mutex m;
 
+  // Start Timer
+  auto startTime = chrono::steady_clock::now();
 
+  for(auto &filecontent:wordmap)
+    {
+      mythreads.push_back(thread(hashfn, ref(ht), ref(filecontent), ref(m)));
+    }
+  for(auto &t : mythreads)
+    {
+      t.join();
+    }
 
-
-
-
-
+  //Sto timer
+  auto stopTime = chrono::steady_clock::now();
+  chrono::duration<double> time_elapsed = stopTime-startTime;
 
 
   // Check Hash Table Values 
   /* (you can uncomment, but this must be commented out for tests)
   for (auto it : dict) {
     if (it.second > thresholdCount)
-      std::cout << it.first << " " << it.second << std::endl;
+      cout << it.first << " " << it.second << endl;
   }
   */
 
   // Do not touch this, need for test cases
-  std::cout << ht.get(testWord) << std::endl;
+  cout << ht.get(testWord) << endl;
+  cerr<<time_elapsed.count()<<"\n";
 
   return 0;
 }
